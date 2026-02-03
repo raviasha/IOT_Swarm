@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Go Gateway - Cloud Bridge Super-Node
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Python Simulator
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.sim
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      - GATEWAY_URL=http://gateway:8080
+      - NODE_COUNT=50
+      - PACKET_LOSS=0.3
+      - RUNTIME=300
+    volumes:
+      - ./results:/app/results
+    command: python simulator.py --nodes 50 --packet-loss 0.3 --runtime 300
+
+networks:
+  default:
+    driver: bridge
