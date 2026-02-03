@@ -14,14 +14,15 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import sys
-from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sim.node import Node, Message, Position, Urgency
@@ -143,12 +144,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+static_dir = Path(__file__).parent.parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
 
 # ============== Endpoints ==============
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Welcome endpoint."""
+    """Serve the web UI."""
+    html_file = Path(__file__).parent.parent / "static" / "index.html"
+    if html_file.exists():
+        return HTMLResponse(content=html_file.read_text(), status_code=200)
+    else:
+        return HTMLResponse(content="""
+        <html>
+            <head><title>P2P Swarm Model</title></head>
+            <body>
+                <h1>P2P Swarm Model API</h1>
+                <p>API is running. Visit <a href="/docs">/docs</a> for API documentation.</p>
+            </body>
+        </html>
+        """, status_code=200)
+
+
+@app.get("/api")
+async def api_info():
+    """API information endpoint."""
     return {
         "name": "P2P Swarm Model API",
         "version": "1.0.0",

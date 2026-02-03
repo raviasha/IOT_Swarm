@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Swarm Model - IoT Network Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: var(--primary-gradient) !important;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        
+        .btn-warning {
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 12px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .node-badge {
+            display: inline-block;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin: 3px;
+            font-size: 0.85rem;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-healthy {
+            background: #28a745;
+        }
+        
+        .status-running {
+            background: #ffc107;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .result-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .network-canvas {
+            background: #1a1a2e;
+            border-radius: 15px;
+            min-height: 400px;
+        }
+        
+        .loading-spinner {
+            display: none;
+        }
+        
+        .loading .loading-spinner {
+            display: inline-block;
+        }
+        
+        .tab-content {
+            padding-top: 20px;
+        }
+        
+        .nav-pills .nav-link {
+            border-radius: 25px;
+            margin: 0 5px;
+            padding: 10px 20px;
+        }
+        
+        .nav-pills .nav-link.active {
+            background: var(--primary-gradient);
+        }
+        
+        .progress {
+            height: 25px;
+            border-radius: 15px;
+        }
+        
+        .progress-bar {
+            background: var(--primary-gradient);
+            border-radius: 15px;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        footer {
+            background: #2d3436;
+            color: white;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-diagram-3-fill me-2"></i>P2P Swarm Model
+            </a>
+            <div class="d-flex align-items-center text-white">
+                <span class="status-indicator status-healthy" id="statusIndicator"></span>
+                <span id="connectionStatus">Connecting...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container">
+        <!-- Stats Row -->
+        <div class="row mb-4" id="statsRow">
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalNodes">-</div>
+                    <div class="stat-label">Total Nodes</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalConnections">-</div>
+                    <div class="stat-label">Connections</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-value" id="messagesDelivered">-</div>
+                    <div class="stat-label">Messages Delivered</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-value" id="packetLoss">-</div>
+                    <div class="stat-label">Packet Loss</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Tabs -->
+        <ul class="nav nav-pills justify-content-center mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="simulate-tab" data-bs-toggle="pill" data-bs-target="#simulate" type="button">
+                    <i class="bi bi-play-circle me-1"></i> Run Simulation
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="nodes-tab" data-bs-toggle="pill" data-bs-target="#nodes" type="button">
+                    <i class="bi bi-hdd-network me-1"></i> View Nodes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="messages-tab" data-bs-toggle="pill" data-bs-target="#messages" type="button">
+                    <i class="bi bi-envelope me-1"></i> Send Message
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="network-tab" data-bs-toggle="pill" data-bs-target="#network" type="button">
+                    <i class="bi bi-gear me-1"></i> Network Control
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabContent">
+            
+            <!-- Simulate Tab -->
+            <div class="tab-pane fade show active" id="simulate" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-sliders me-2"></i>Simulation Configuration
+                            </div>
+                            <div class="card-body">
+                                <form id="simulationForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Number of Nodes</label>
+                                        <select class="form-select" id="numNodes">
+                                            <option value="10">10 nodes (Quick test)</option>
+                                            <option value="20" selected>20 nodes (Small network)</option>
+                                            <option value="50">50 nodes (Medium network)</option>
+                                            <option value="100">100 nodes (Large network)</option>
+                                            <option value="200">200 nodes (Stress test)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Packet Loss Rate</label>
+                                        <select class="form-select" id="packetLossRate">
+                                            <option value="0">0% (Perfect network)</option>
+                                            <option value="0.1" selected>10% (Good conditions)</option>
+                                            <option value="0.2">20% (Moderate loss)</option>
+                                            <option value="0.3">30% (Poor conditions)</option>
+                                            <option value="0.5">50% (Severe loss)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Simulation Duration</label>
+                                        <select class="form-select" id="runtime">
+                                            <option value="5">5 seconds (Quick)</option>
+                                            <option value="10" selected>10 seconds (Standard)</option>
+                                            <option value="30">30 seconds (Extended)</option>
+                                            <option value="60">60 seconds (Long run)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">World Size</label>
+                                        <select class="form-select" id="worldSize">
+                                            <option value="300">300m (Dense)</option>
+                                            <option value="500" selected>500m (Normal)</option>
+                                            <option value="1000">1000m (Sparse)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Communication Range</label>
+                                        <select class="form-select" id="commRange">
+                                            <option value="50">50m (Short range)</option>
+                                            <option value="100" selected>100m (Normal)</option>
+                                            <option value="150">150m (Extended)</option>
+                                            <option value="200">200m (Long range)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-check mb-4">
+                                        <input class="form-check-input" type="checkbox" id="enableMobility">
+                                        <label class="form-check-label" for="enableMobility">
+                                            <i class="bi bi-arrows-move me-1"></i>Enable Node Mobility
+                                        </label>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary w-100" id="runSimBtn">
+                                        <span class="loading-spinner spinner-border spinner-border-sm me-2"></span>
+                                        <i class="bi bi-play-fill me-1"></i>Run Simulation
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="bi bi-graph-up me-2"></i>Simulation Results
+                            </div>
+                            <div class="card-body">
+                                <div id="simResultsPlaceholder" class="text-center text-muted py-5">
+                                    <i class="bi bi-rocket-takeoff" style="font-size: 4rem;"></i>
+                                    <p class="mt-3">Configure and run a simulation to see results</p>
+                                </div>
+                                
+                                <div id="simResults" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label">Progress</label>
+                                        <div class="progress">
+                                            <div class="progress-bar" id="simProgress" role="progressbar" style="width: 0%">0%</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-4">
+                                        <div class="col-6 mb-3">
+                                            <div class="stat-card">
+                                                <div class="stat-value" id="resultSent">0</div>
+                                                <div class="stat-label">Messages Sent</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="stat-card">
+                                                <div class="stat-value" id="resultDelivered">0</div>
+                                                <div class="stat-label">Delivered</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="stat-card">
+                                                <div class="stat-value" id="resultRatio">0%</div>
+                                                <div class="stat-label">Delivery Ratio</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="stat-card">
+                                                <div class="stat-value" id="resultDropped">0</div>
+                                                <div class="stat-label">Packets Dropped</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-success mt-3" id="simComplete" style="display: none;">
+                                        <i class="bi bi-check-circle me-2"></i>Simulation completed successfully!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nodes Tab -->
+            <div class="tab-pane fade" id="nodes" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-4 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-plus-circle me-2"></i>Network Controls
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Reset Network</label>
+                                    <select class="form-select" id="resetNodeCount">
+                                        <option value="5">5 nodes</option>
+                                        <option value="10" selected>10 nodes</option>
+                                        <option value="20">20 nodes</option>
+                                        <option value="50">50 nodes</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-warning w-100" id="resetNetworkBtn">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Reset Network
+                                </button>
+                                
+                                <hr>
+                                
+                                <button class="btn btn-primary w-100" id="refreshNodesBtn">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Refresh Node List
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-8 mb-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-hdd-network me-2"></i>Node List</span>
+                                <span class="badge bg-light text-dark" id="nodeCount">0 nodes</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="nodeList" class="row">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                                        <p>Loading nodes...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Node Details Modal -->
+                <div class="card mt-3" id="nodeDetailsCard" style="display: none;">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i>Node Details: <span id="selectedNodeId"></span>
+                    </div>
+                    <div class="card-body" id="nodeDetails"></div>
+                </div>
+            </div>
+            
+            <!-- Messages Tab -->
+            <div class="tab-pane fade" id="messages" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-send me-2"></i>Inject Message
+                            </div>
+                            <div class="card-body">
+                                <form id="messageForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">From Node (optional)</label>
+                                        <select class="form-select" id="msgFromNode">
+                                            <option value="">Random node</option>
+                                        </select>
+                                        <small class="text-muted">Leave empty for random sender</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">To Node (optional)</label>
+                                        <select class="form-select" id="msgToNode">
+                                            <option value="">Broadcast to all</option>
+                                        </select>
+                                        <small class="text-muted">Leave empty for broadcast</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Message Urgency</label>
+                                        <select class="form-select" id="msgUrgency">
+                                            <option value="0">0 - Lowest</option>
+                                            <option value="1">1 - Low</option>
+                                            <option value="2" selected>2 - Normal</option>
+                                            <option value="3">3 - High</option>
+                                            <option value="4">4 - Critical</option>
+                                            <option value="5">5 - Emergency</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Message Content</label>
+                                        <textarea class="form-control" id="msgPayload" rows="3" placeholder='{"sensor": "temperature", "value": 25.5}'></textarea>
+                                        <small class="text-muted">Enter JSON payload</small>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-success w-100" id="sendMsgBtn">
+                                        <i class="bi bi-send-fill me-1"></i>Send Message
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="bi bi-journal-text me-2"></i>Message Log
+                            </div>
+                            <div class="card-body">
+                                <div class="result-box" id="messageLog">
+                                    <p class="text-muted">No messages sent yet...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Network Tab -->
+            <div class="tab-pane fade" id="network" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-diagram-2 me-2"></i>Network Partitioning
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Simulate network splits by isolating groups of nodes</p>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Group 1 Nodes</label>
+                                    <select class="form-select" id="partitionGroup1" multiple size="4">
+                                    </select>
+                                    <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Group 2 Nodes</label>
+                                    <select class="form-select" id="partitionGroup2" multiple size="4">
+                                    </select>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-warning" id="createPartitionBtn">
+                                        <i class="bi bi-scissors me-1"></i>Create Partition
+                                    </button>
+                                    <button class="btn btn-success" id="healPartitionBtn">
+                                        <i class="bi bi-bandaid me-1"></i>Heal Partition
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="bi bi-speedometer2 me-2"></i>Network Status
+                            </div>
+                            <div class="card-body">
+                                <div id="networkStatusDetails">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="bi bi-wifi" style="font-size: 2rem;"></i>
+                                        <p>Click refresh to load network status</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary w-100 mt-3" id="refreshNetworkBtn">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Refresh Status
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-1">
+                <i class="bi bi-github me-2"></i>
+                <a href="https://github.com/raviasha/IOT_Swarm" class="text-white">P2P Swarm Model</a>
+            </p>
+            <p class="mb-0 small text-muted">Software-only IoT Network Simulator | No hardware required</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // API Base URL - Change this to your Railway URL
+        const API_BASE = window.location.origin;
+        
+        // Helper function to show toast notifications
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            const bgClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast ${bgClass} text-white" role="alert">
+                    <div class="toast-body d-flex justify-content-between align-items-center">
+                        ${message}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toast = new bootstrap.Toast(document.getElementById(toastId));
+            toast.show();
+        }
+        
+        // API helper
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'API Error');
+            }
+            return response.json();
+        }
+        
+        // Check API health
+        async function checkHealth() {
+            try {
+                const data = await apiCall('/health');
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('statusIndicator').className = 'status-indicator status-healthy';
+                return true;
+            } catch (e) {
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('statusIndicator').className = 'status-indicator';
+                return false;
+            }
+        }
+        
+        // Load network status
+        async function loadNetworkStatus() {
+            try {
+                const data = await apiCall('/api/network/status');
+                
+                document.getElementById('totalNodes').textContent = data.nodes;
+                document.getElementById('totalConnections').textContent = data.total_connections;
+                document.getElementById('messagesDelivered').textContent = data.statistics.successful_transmissions;
+                document.getElementById('packetLoss').textContent = (data.config.packet_loss * 100).toFixed(0) + '%';
+                
+                // Update network details
+                document.getElementById('networkStatusDetails').innerHTML = `
+                    <table class="table table-sm">
+                        <tr><td><strong>Status</strong></td><td><span class="badge bg-success">${data.status}</span></td></tr>
+                        <tr><td><strong>Nodes</strong></td><td>${data.nodes}</td></tr>
+                        <tr><td><strong>Connections</strong></td><td>${data.total_connections}</td></tr>
+                        <tr><td><strong>Partitions</strong></td><td>${data.partitions}</td></tr>
+                        <tr><td><strong>Packet Loss</strong></td><td>${(data.config.packet_loss * 100).toFixed(0)}%</td></tr>
+                        <tr><td><strong>Delay Range</strong></td><td>${data.config.min_delay_ms}-${data.config.max_delay_ms}ms</td></tr>
+                        <tr><td><strong>Comm Range</strong></td><td>${data.config.communication_range}m</td></tr>
+                        <tr><td><strong>World Size</strong></td><td>${data.config.world_size.width}x${data.config.world_size.height}m</td></tr>
+                        <tr><td><strong>Total Transmissions</strong></td><td>${data.statistics.total_transmissions}</td></tr>
+                        <tr><td><strong>Successful</strong></td><td>${data.statistics.successful_transmissions}</td></tr>
+                        <tr><td><strong>Dropped</strong></td><td>${data.statistics.dropped_packets}</td></tr>
+                    </table>
+                `;
+            } catch (e) {
+                showToast('Failed to load network status: ' + e.message, 'error');
+            }
+        }
+        
+        // Load nodes
+        async function loadNodes() {
+            try {
+                const data = await apiCall('/api/nodes');
+                document.getElementById('nodeCount').textContent = `${data.count} nodes`;
+                
+                const nodeList = document.getElementById('nodeList');
+                nodeList.innerHTML = '';
+                
+                // Populate node selectors
+                const fromSelect = document.getElementById('msgFromNode');
+                const toSelect = document.getElementById('msgToNode');
+                const group1Select = document.getElementById('partitionGroup1');
+                const group2Select = document.getElementById('partitionGroup2');
+                
+                fromSelect.innerHTML = '<option value="">Random node</option>';
+                toSelect.innerHTML = '<option value="">Broadcast to all</option>';
+                group1Select.innerHTML = '';
+                group2Select.innerHTML = '';
+                
+                data.nodes.forEach((node, index) => {
+                    // Add to node list
+                    const col = document.createElement('div');
+                    col.className = 'col-md-6 col-lg-4 mb-3';
+                    col.innerHTML = `
+                        <div class="card h-100" style="cursor: pointer;" onclick="showNodeDetails('${node.node_id}')">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-hdd text-primary me-2"></i>${node.node_id}
+                                </h6>
+                                <p class="card-text small mb-1">
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    (${node.position.x.toFixed(0)}, ${node.position.y.toFixed(0)})
+                                </p>
+                                <p class="card-text small mb-1">
+                                    <i class="bi bi-people me-1"></i>
+                                    ${node.neighbors.length} neighbors
+                                </p>
+                                <p class="card-text small mb-0">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    ${node.stats.messages_sent} sent / ${node.stats.messages_received} recv
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    nodeList.appendChild(col);
+                    
+                    // Add to selectors
+                    fromSelect.innerHTML += `<option value="${node.node_id}">${node.node_id}</option>`;
+                    toSelect.innerHTML += `<option value="${node.node_id}">${node.node_id}</option>`;
+                    
+                    // Split nodes for partition groups
+                    if (index < data.count / 2) {
+                        group1Select.innerHTML += `<option value="${node.node_id}">${node.node_id}</option>`;
+                    } else {
+                        group2Select.innerHTML += `<option value="${node.node_id}">${node.node_id}</option>`;
+                    }
+                });
+                
+            } catch (e) {
+                showToast('Failed to load nodes: ' + e.message, 'error');
+            }
+        }
+        
+        // Show node details
+        async function showNodeDetails(nodeId) {
+            try {
+                const data = await apiCall(`/api/nodes/${nodeId}`);
+                document.getElementById('selectedNodeId').textContent = nodeId;
+                document.getElementById('nodeDetails').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Position</h6>
+                            <p>X: ${data.position.x.toFixed(2)}, Y: ${data.position.y.toFixed(2)}</p>
+                            <h6>Communication Range</h6>
+                            <p>${data.communication_range}m</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Statistics</h6>
+                            <ul class="list-unstyled">
+                                <li>Sent: ${data.stats.messages_sent}</li>
+                                <li>Received: ${data.stats.messages_received}</li>
+                                <li>Forwarded: ${data.stats.messages_forwarded}</li>
+                                <li>Dropped: ${data.stats.messages_dropped}</li>
+                                <li>Delivered: ${data.stats.messages_delivered}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <h6>Neighbors (${data.neighbors.length})</h6>
+                    <div>${data.neighbors.map(n => `<span class="node-badge">${n}</span>`).join('')}</div>
+                `;
+                document.getElementById('nodeDetailsCard').style.display = 'block';
+            } catch (e) {
+                showToast('Failed to load node details: ' + e.message, 'error');
+            }
+        }
+        
+        // Run simulation
+        document.getElementById('simulationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('runSimBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            const config = {
+                num_nodes: parseInt(document.getElementById('numNodes').value),
+                packet_loss: parseFloat(document.getElementById('packetLossRate').value),
+                runtime_seconds: parseFloat(document.getElementById('runtime').value),
+                world_size: parseFloat(document.getElementById('worldSize').value),
+                communication_range: parseFloat(document.getElementById('commRange').value),
+                enable_mobility: document.getElementById('enableMobility').checked
+            };
+            
+            try {
+                const startData = await apiCall('/api/simulate', 'POST', config);
+                showToast('Simulation started!', 'success');
+                
+                document.getElementById('simResultsPlaceholder').style.display = 'none';
+                document.getElementById('simResults').style.display = 'block';
+                document.getElementById('simComplete').style.display = 'none';
+                
+                // Poll for results
+                const simId = startData.simulation_id;
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const status = await apiCall(`/api/simulate/${simId}`);
+                        
+                        document.getElementById('simProgress').style.width = status.progress + '%';
+                        document.getElementById('simProgress').textContent = status.progress.toFixed(0) + '%';
+                        
+                        if (status.status === 'completed') {
+                            clearInterval(pollInterval);
+                            document.getElementById('resultSent').textContent = status.results.messages_sent;
+                            document.getElementById('resultDelivered').textContent = status.results.messages_delivered;
+                            document.getElementById('resultRatio').textContent = (status.results.delivery_ratio * 100).toFixed(1) + '%';
+                            document.getElementById('resultDropped').textContent = status.results.packets_dropped;
+                            document.getElementById('simComplete').style.display = 'block';
+                            showToast('Simulation completed!', 'success');
+                            btn.classList.remove('loading');
+                            btn.disabled = false;
+                        } else if (status.status === 'failed') {
+                            clearInterval(pollInterval);
+                            showToast('Simulation failed: ' + (status.results?.error || 'Unknown error'), 'error');
+                            btn.classList.remove('loading');
+                            btn.disabled = false;
+                        }
+                    } catch (e) {
+                        clearInterval(pollInterval);
+                        showToast('Error checking simulation status', 'error');
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                    }
+                }, 500);
+                
+            } catch (e) {
+                showToast('Failed to start simulation: ' + e.message, 'error');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        });
+        
+        // Send message
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let payload;
+            try {
+                const payloadText = document.getElementById('msgPayload').value || '{}';
+                payload = JSON.parse(payloadText);
+            } catch {
+                showToast('Invalid JSON payload', 'error');
+                return;
+            }
+            
+            const body = {
+                from_node: document.getElementById('msgFromNode').value || null,
+                to_node: document.getElementById('msgToNode').value || null,
+                urgency: parseInt(document.getElementById('msgUrgency').value),
+                payload: payload
+            };
+            
+            try {
+                const data = await apiCall('/api/messages/inject', 'POST', body);
+                showToast('Message sent successfully!', 'success');
+                
+                const log = document.getElementById('messageLog');
+                const timestamp = new Date().toLocaleTimeString();
+                log.innerHTML = `<div class="mb-2"><strong>[${timestamp}]</strong> Message ${data.message_id.substring(0,8)}... sent from ${data.from_node} to ${data.to_node || 'broadcast'}</div>` + log.innerHTML;
+                
+            } catch (e) {
+                showToast('Failed to send message: ' + e.message, 'error');
+            }
+        });
+        
+        // Reset network
+        document.getElementById('resetNetworkBtn').addEventListener('click', async () => {
+            const numNodes = parseInt(document.getElementById('resetNodeCount').value);
+            try {
+                await apiCall(`/api/nodes/reset?num_nodes=${numNodes}`, 'POST');
+                showToast(`Network reset with ${numNodes} nodes`, 'success');
+                loadNodes();
+                loadNetworkStatus();
+            } catch (e) {
+                showToast('Failed to reset network: ' + e.message, 'error');
+            }
+        });
+        
+        // Create partition
+        document.getElementById('createPartitionBtn').addEventListener('click', async () => {
+            const group1 = Array.from(document.getElementById('partitionGroup1').selectedOptions).map(o => o.value);
+            const group2 = Array.from(document.getElementById('partitionGroup2').selectedOptions).map(o => o.value);
+            
+            if (group1.length === 0 || group2.length === 0) {
+                showToast('Please select nodes for both groups', 'error');
+                return;
+            }
+            
+            try {
+                await apiCall(`/api/network/partition?group1=${group1.join(',')}&group2=${group2.join(',')}`, 'POST', {group1, group2});
+                showToast('Network partitioned!', 'success');
+                loadNetworkStatus();
+            } catch (e) {
+                showToast('Failed to create partition: ' + e.message, 'error');
+            }
+        });
+        
+        // Heal partition
+        document.getElementById('healPartitionBtn').addEventListener('click', async () => {
+            try {
+                await apiCall('/api/network/heal', 'POST');
+                showToast('Network healed!', 'success');
+                loadNetworkStatus();
+            } catch (e) {
+                showToast('Failed to heal partition: ' + e.message, 'error');
+            }
+        });
+        
+        // Refresh buttons
+        document.getElementById('refreshNodesBtn').addEventListener('click', loadNodes);
+        document.getElementById('refreshNetworkBtn').addEventListener('click', loadNetworkStatus);
+        
+        // Initialize
+        async function init() {
+            await checkHealth();
+            await loadNetworkStatus();
+            await loadNodes();
+        }
+        
+        init();
+        
+        // Refresh health check every 30 seconds
+        setInterval(checkHealth, 30000);
+    </script>
+</body>
+</html>

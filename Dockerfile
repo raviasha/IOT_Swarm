@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir fastapi uvicorn
 # Copy application code
 COPY sim/ ./sim/
 COPY api/ ./api/
+COPY static/ ./static/
 
 # Set Python path
 ENV PYTHONPATH=/app
