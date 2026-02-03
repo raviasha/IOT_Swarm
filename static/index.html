@@ -207,12 +207,386 @@
             <a class="navbar-brand" href="#">
                 <i class="bi bi-diagram-3-fill me-2"></i>P2P Swarm Model
             </a>
-            <div class="d-flex align-items-center text-white">
-                <span class="status-indicator status-healthy" id="statusIndicator"></span>
-                <span id="connectionStatus">Connecting...</span>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-light me-3" data-bs-toggle="modal" data-bs-target="#userManualModal">
+                    <i class="bi bi-book me-1"></i> User Manual
+                </button>
+                <span class="text-white">
+                    <span class="status-indicator status-healthy" id="statusIndicator"></span>
+                    <span id="connectionStatus">Connecting...</span>
+                </span>
             </div>
         </div>
     </nav>
+
+    <!-- User Manual Modal -->
+    <div class="modal fade" id="userManualModal" tabindex="-1" aria-labelledby="userManualModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: var(--primary-gradient); color: white;">
+                    <h4 class="modal-title" id="userManualModalLabel">
+                        <i class="bi bi-book me-2"></i>P2P Swarm Model - User Manual
+                    </h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    
+                    <!-- Table of Contents -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light text-dark">
+                            <i class="bi bi-list-ul me-2"></i>Table of Contents
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><a href="#manual-intro">1. Introduction</a></li>
+                                        <li><a href="#manual-overview">2. System Overview</a></li>
+                                        <li><a href="#manual-quickstart">3. Quick Start Guide</a></li>
+                                        <li><a href="#manual-simulation">4. Running Simulations</a></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><a href="#manual-nodes">5. Viewing Nodes</a></li>
+                                        <li><a href="#manual-messages">6. Sending Messages</a></li>
+                                        <li><a href="#manual-network">7. Network Control</a></li>
+                                        <li><a href="#manual-glossary">8. Glossary</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1. Introduction -->
+                    <div id="manual-intro" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-info-circle me-2"></i>1. Introduction</h4>
+                        <hr>
+                        <p>Welcome to the <strong>P2P Swarm Model</strong> - a software-only simulation of peer-to-peer communication networks for IoT (Internet of Things) devices.</p>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <strong>What is this?</strong> This is a research and educational tool that simulates how IoT devices communicate in a mesh network without requiring any physical hardware.
+                        </div>
+                        
+                        <h5>Key Features:</h5>
+                        <ul>
+                            <li><strong>Virtual Nodes</strong> - Simulated IoT devices that can send and receive messages</li>
+                            <li><strong>Network Simulation</strong> - Realistic network conditions including packet loss and delays</li>
+                            <li><strong>Gossip Protocol</strong> - Messages spread through the network like rumors</li>
+                            <li><strong>Visual Feedback</strong> - See your network topology and watch messages propagate</li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. System Overview -->
+                    <div id="manual-overview" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-diagram-3 me-2"></i>2. System Overview</h4>
+                        <hr>
+                        
+                        <h5>How It Works:</h5>
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="bi bi-hdd-network text-primary" style="font-size: 3rem;"></i>
+                                    <h6 class="mt-2">Nodes</h6>
+                                    <small>Virtual IoT devices with unique IDs and positions</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="bi bi-wifi text-success" style="font-size: 3rem;"></i>
+                                    <h6 class="mt-2">Network</h6>
+                                    <small>Simulated wireless connections between nearby nodes</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="bi bi-envelope text-warning" style="font-size: 3rem;"></i>
+                                    <h6 class="mt-2">Messages</h6>
+                                    <small>Data packets that hop from node to node</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-3">Dashboard Statistics:</h5>
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Statistic</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Total Nodes</strong></td>
+                                    <td>Number of virtual IoT devices in the network</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Connections</strong></td>
+                                    <td>Total number of links between neighboring nodes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Messages Delivered</strong></td>
+                                    <td>Successfully received messages across all nodes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Packet Loss</strong></td>
+                                    <td>Percentage of messages lost during transmission</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3. Quick Start Guide -->
+                    <div id="manual-quickstart" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-rocket-takeoff me-2"></i>3. Quick Start Guide</h4>
+                        <hr>
+                        
+                        <div class="alert alert-success">
+                            <strong>Ready to try?</strong> Follow these 3 simple steps:
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-primary">
+                                    <div class="card-body text-center">
+                                        <div class="display-4 text-primary">1</div>
+                                        <h5>Go to "Run Simulation"</h5>
+                                        <p class="text-muted">Click the first tab to access simulation controls</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-success">
+                                    <div class="card-body text-center">
+                                        <div class="display-4 text-success">2</div>
+                                        <h5>Adjust Settings</h5>
+                                        <p class="text-muted">Use sliders to set nodes, packet loss, and runtime</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-warning">
+                                    <div class="card-body text-center">
+                                        <div class="display-4 text-warning">3</div>
+                                        <h5>Click "Start"</h5>
+                                        <p class="text-muted">Watch the simulation run and view results!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Running Simulations -->
+                    <div id="manual-simulation" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-play-circle me-2"></i>4. Running Simulations</h4>
+                        <hr>
+                        
+                        <h5>Simulation Parameters:</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Range</th>
+                                    <th>Description</th>
+                                    <th>Recommendation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Number of Nodes</strong></td>
+                                    <td>2 - 100</td>
+                                    <td>How many virtual devices to create</td>
+                                    <td>Start with 20-30 for testing</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Packet Loss (%)</strong></td>
+                                    <td>0 - 100%</td>
+                                    <td>Chance that a message fails to deliver</td>
+                                    <td>10-20% for realistic conditions</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Runtime (seconds)</strong></td>
+                                    <td>1 - 60</td>
+                                    <td>How long the simulation runs</td>
+                                    <td>10-30 seconds for quick tests</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Communication Range</strong></td>
+                                    <td>10 - 300</td>
+                                    <td>How far a node can "reach" others</td>
+                                    <td>100-150 for normal density</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h5 class="mt-3">Understanding Results:</h5>
+                        <ul>
+                            <li><strong>Delivery Ratio</strong> - Percentage of messages that reached their destination (higher is better)</li>
+                            <li><strong>Messages Sent</strong> - Total messages generated during simulation</li>
+                            <li><strong>Messages Delivered</strong> - Messages that successfully arrived</li>
+                            <li><strong>Packets Dropped</strong> - Messages lost due to network conditions</li>
+                        </ul>
+                    </div>
+
+                    <!-- 5. Viewing Nodes -->
+                    <div id="manual-nodes" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-hdd-network me-2"></i>5. Viewing Nodes</h4>
+                        <hr>
+                        
+                        <p>The <strong>"View Nodes"</strong> tab shows all virtual devices in your network.</p>
+                        
+                        <h5>Network Visualization:</h5>
+                        <ul>
+                            <li><strong>Red dots</strong> - Individual nodes (IoT devices)</li>
+                            <li><strong>Blue lines</strong> - Connections between neighboring nodes</li>
+                            <li><strong>Hover over nodes</strong> - See node ID and details</li>
+                        </ul>
+
+                        <h5>Node Information:</h5>
+                        <ul>
+                            <li><strong>Node ID</strong> - Unique identifier (e.g., node_001)</li>
+                            <li><strong>Position</strong> - X, Y coordinates in the virtual world</li>
+                            <li><strong>Neighbors</strong> - Other nodes within communication range</li>
+                            <li><strong>Stats</strong> - Messages sent, received, and delivered</li>
+                        </ul>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <strong>Tip:</strong> Click "Refresh" to update the node list after running a simulation.
+                        </div>
+                    </div>
+
+                    <!-- 6. Sending Messages -->
+                    <div id="manual-messages" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-envelope me-2"></i>6. Sending Messages</h4>
+                        <hr>
+                        
+                        <p>The <strong>"Send Message"</strong> tab lets you inject custom messages into the network.</p>
+                        
+                        <h5>Message Fields:</h5>
+                        <table class="table table-bordered">
+                            <tr>
+                                <td><strong>From Node</strong></td>
+                                <td>Select which node sends the message (or leave as "Random")</td>
+                            </tr>
+                            <tr>
+                                <td><strong>To Node</strong></td>
+                                <td>Select destination (or leave as "Broadcast" for all nodes)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Urgency</strong></td>
+                                <td>Priority level: Low (0) to Emergency (5)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Message Content</strong></td>
+                                <td>Your custom message text or data</td>
+                            </tr>
+                        </table>
+
+                        <h5>Urgency Levels:</h5>
+                        <div class="row text-center">
+                            <div class="col"><span class="badge bg-secondary">0 - Lowest</span></div>
+                            <div class="col"><span class="badge bg-info">1 - Low</span></div>
+                            <div class="col"><span class="badge bg-primary">2 - Normal</span></div>
+                            <div class="col"><span class="badge bg-warning">3 - High</span></div>
+                            <div class="col"><span class="badge bg-danger">4 - Critical</span></div>
+                            <div class="col"><span class="badge bg-dark">5 - Emergency</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Network Control -->
+                    <div id="manual-network" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-gear me-2"></i>7. Network Control</h4>
+                        <hr>
+                        
+                        <p>The <strong>"Network Control"</strong> tab provides advanced network management.</p>
+                        
+                        <h5>Available Actions:</h5>
+                        
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6><i class="bi bi-arrow-repeat text-primary me-2"></i>Reset Network</h6>
+                                <p class="mb-0 text-muted">Recreate all nodes with new random positions. Use this to start fresh.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6><i class="bi bi-scissors text-danger me-2"></i>Create Partition</h6>
+                                <p class="mb-0 text-muted">Split the network into isolated groups. Simulates network failures or geographic separation.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6><i class="bi bi-bandaid text-success me-2"></i>Heal Partition</h6>
+                                <p class="mb-0 text-muted">Reconnect all partitioned groups. Restores full network connectivity.</p>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>What is a Partition?</strong> A network partition occurs when a group of nodes becomes isolated and cannot communicate with the rest of the network. This simulates real-world scenarios like cable cuts or equipment failures.
+                        </div>
+                    </div>
+
+                    <!-- 8. Glossary -->
+                    <div id="manual-glossary" class="mb-4">
+                        <h4 class="text-primary"><i class="bi bi-book me-2"></i>8. Glossary</h4>
+                        <hr>
+                        
+                        <dl class="row">
+                            <dt class="col-sm-3">Node</dt>
+                            <dd class="col-sm-9">A virtual IoT device in the simulation</dd>
+                            
+                            <dt class="col-sm-3">Swarm</dt>
+                            <dd class="col-sm-9">A collection of nodes working together</dd>
+                            
+                            <dt class="col-sm-3">P2P (Peer-to-Peer)</dt>
+                            <dd class="col-sm-9">Direct communication between nodes without a central server</dd>
+                            
+                            <dt class="col-sm-3">Gossip Protocol</dt>
+                            <dd class="col-sm-9">Message spreading technique where nodes share information with neighbors</dd>
+                            
+                            <dt class="col-sm-3">TTL (Time-to-Live)</dt>
+                            <dd class="col-sm-9">Maximum number of hops a message can take before expiring</dd>
+                            
+                            <dt class="col-sm-3">Packet Loss</dt>
+                            <dd class="col-sm-9">When messages fail to reach their destination</dd>
+                            
+                            <dt class="col-sm-3">Partition</dt>
+                            <dd class="col-sm-9">Network split where groups cannot communicate</dd>
+                            
+                            <dt class="col-sm-3">Delivery Ratio</dt>
+                            <dd class="col-sm-9">Percentage of messages successfully delivered</dd>
+                            
+                            <dt class="col-sm-3">Communication Range</dt>
+                            <dd class="col-sm-9">Maximum distance for two nodes to connect</dd>
+                            
+                            <dt class="col-sm-3">Broadcast</dt>
+                            <dd class="col-sm-9">Sending a message to all nodes in the network</dd>
+                        </dl>
+                    </div>
+
+                    <!-- Support -->
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5><i class="bi bi-question-circle me-2"></i>Need More Help?</h5>
+                            <p class="mb-2">Check out the project documentation:</p>
+                            <a href="https://github.com/raviasha/IOT_Swarm" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-github me-2"></i>View on GitHub
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
