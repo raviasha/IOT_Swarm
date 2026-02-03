@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Swarm Model - IoT Network Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+        
+        .navbar {
+            background: rgba(0,0,0,0.3) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .navbar-brand { font-weight: 700; font-size: 1.5rem; }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-header {
+            background: rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .card-body { color: #ddd; }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .form-control, .form-select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            border-radius: 10px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: rgba(255,255,255,0.15);
+            border-color: #667eea;
+            color: #fff;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .form-select option { background: #1a1a2e; color: #fff; }
+        .form-label { color: #aaa; font-weight: 500; }
+        
+        #simCanvas {
+            background: radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 100%);
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.1);
+            cursor: crosshair;
+        }
+        
+        .control-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .playback-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .playback-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+        
+        .playback-btn.active {
+            background: var(--primary-gradient);
+            border-color: transparent;
+        }
+        
+        .playback-btn.play-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .speed-btn {
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        
+        .speed-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-value.success { -webkit-text-fill-color: #28a745; }
+        .stat-value.danger { -webkit-text-fill-color: #dc3545; }
+        .stat-value.warning { -webkit-text-fill-color: #ffc107; }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .event-log {
+            height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+        
+        .event-log::-webkit-scrollbar { width: 8px; }
+        .event-log::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .event-log::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        
+        .log-entry { padding: 3px 8px; margin: 2px 0; border-radius: 4px; }
+        .log-entry.sent { background: rgba(102, 126, 234, 0.2); color: #a5b4fc; }
+        .log-entry.delivered { background: rgba(40, 167, 69, 0.2); color: #90EE90; }
+        .log-entry.dropped { background: rgba(220, 53, 69, 0.2); color: #ff9999; }
+        .log-entry.info { background: rgba(255, 193, 7, 0.2); color: #ffd700; }
+        
+        .timeline-slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .timeline-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .legend-line { width: 30px; height: 3px; border-radius: 2px; }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-dot.ready { background: #28a745; animation: pulse 2s infinite; }
+        .status-dot.running { background: #ffc107; animation: pulse 1s infinite; }
+        .status-dot.paused { background: #17a2b8; }
+        .status-dot.stopped { background: #6c757d; }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        @media (max-width: 768px) {
+            .playback-controls { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-diagram-3-fill me-2"></i>P2P Swarm Visualizer
+            </a>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-light btn-sm me-3" data-bs-toggle="modal" data-bs-target="#helpModal">
+                    <i class="bi bi-question-circle me-1"></i> Help
+                </button>
+                <span class="status-dot ready" id="statusDot"></span>
+                <span id="statusText">Ready</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="row">
+            <!-- Left Panel - Controls -->
+            <div class="col-lg-3 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-sliders me-2"></i>Simulation Settings
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Number of Nodes</label>
+                            <input type="range" class="form-range" id="nodeCount" min="5" max="50" value="15">
+                            <div class="d-flex justify-content-between">
+                                <small>5</small>
+                                <strong id="nodeCountValue">15</strong>
+                                <small>50</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Packet Loss Rate</label>
+                            <input type="range" class="form-range" id="packetLoss" min="0" max="80" value="20">
+                            <div class="d-flex justify-content-between">
+                                <small>0%</small>
+                                <strong id="packetLossValue">20%</strong>
+                                <small>80%</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Message Frequency</label>
+                            <input type="range" class="form-range" id="msgFrequency" min="1" max="10" value="3">
+                            <div class="d-flex justify-content-between">
+                                <small>Slow</small>
+                                <strong id="msgFrequencyValue">3/sec</strong>
+                                <small>Fast</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Communication Range</label>
+                            <input type="range" class="form-range" id="commRange" min="50" max="200" value="120">
+                            <div class="d-flex justify-content-between">
+                                <small>50</small>
+                                <strong id="commRangeValue">120</strong>
+                                <small>200</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Simulation Duration</label>
+                            <select class="form-select" id="simDuration">
+                                <option value="10">10 seconds</option>
+                                <option value="20" selected>20 seconds</option>
+                                <option value="30">30 seconds</option>
+                                <option value="60">60 seconds</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="showConnections" checked>
+                            <label class="form-check-label" for="showConnections">Show Connections</label>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="showLabels" checked>
+                            <label class="form-check-label" for="showLabels">Show Node Labels</label>
+                        </div>
+                        
+                        <button class="btn btn-primary w-100" id="initSimBtn">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Initialize Network
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <i class="bi bi-palette me-2"></i>Legend
+                    </div>
+                    <div class="card-body">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #667eea;"></div>
+                            <span>Node (Idle)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #28a745;"></div>
+                            <span>Node (Sending)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #ffc107;"></div>
+                            <span>Node (Receiving)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line" style="background: rgba(255,255,255,0.2);"></div>
+                            <span>Connection</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #00ff00; box-shadow: 0 0 10px #00ff00;"></div>
+                            <span>Packet (Success)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #ff4444; box-shadow: 0 0 10px #ff4444;"></div>
+                            <span>Packet (Dropped)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Center - Visualization -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-broadcast me-2"></i>Network Visualization</span>
+                        <span class="badge bg-primary" id="simTime">00:00</span>
+                    </div>
+                    <div class="card-body p-2">
+                        <canvas id="simCanvas" width="800" height="500"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Playback Controls -->
+                <div class="control-panel mt-3">
+                    <div class="playback-controls">
+                        <button class="playback-btn" id="stepBackBtn" title="Step Back">
+                            <i class="bi bi-skip-backward-fill"></i>
+                        </button>
+                        <button class="playback-btn" id="stopBtn" title="Stop">
+                            <i class="bi bi-stop-fill"></i>
+                        </button>
+                        <button class="playback-btn play-btn" id="playPauseBtn" title="Play/Pause">
+                            <i class="bi bi-play-fill" id="playPauseIcon"></i>
+                        </button>
+                        <button class="playback-btn" id="stepForwardBtn" title="Step Forward">
+                            <i class="bi bi-skip-forward-fill"></i>
+                        </button>
+                        <div class="speed-control ms-4">
+                            <span class="text-muted me-2">Speed:</span>
+                            <button class="speed-btn" data-speed="0.25">0.25x</button>
+                            <button class="speed-btn" data-speed="0.5">0.5x</button>
+                            <button class="speed-btn active" data-speed="1">1x</button>
+                            <button class="speed-btn" data-speed="2">2x</button>
+                            <button class="speed-btn" data-speed="4">4x</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline -->
+                    <div class="mt-3">
+                        <input type="range" class="timeline-slider" id="timeline" min="0" max="100" value="0">
+                        <div class="time-display">
+                            <span id="currentTime">0:00</span>
+                            <span id="totalTime">0:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Stats & Log -->
+            <div class="col-lg-3 mb-4">
+                <!-- Live Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-bar-chart me-2"></i>Live Statistics
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <div class="stat-box">
+                                    <div class="stat-value" id="statSent">0</div>
+                                    <div class="stat-label">Sent</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="stat-box">
+                                    <div class="stat-value success" id="statDelivered">0</div>
+                                    <div class="stat-label">Delivered</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="stat-box">
+                                    <div class="stat-value danger" id="statDropped">0</div>
+                                    <div class="stat-label">Dropped</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="stat-box">
+                                    <div class="stat-value warning" id="statInFlight">0</div>
+                                    <div class="stat-label">In Flight</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr style="border-color: rgba(255,255,255,0.1);">
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="stat-value" style="font-size: 1.5rem;" id="deliveryRate">0%</div>
+                                <div class="stat-label">Delivery Rate</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-value" style="font-size: 1.5rem;" id="avgLatency">0ms</div>
+                                <div class="stat-label">Avg Latency</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Event Log -->
+                <div class="card mt-3">
+                    <div class="card-header d-flex justify-content-between">
+                        <span><i class="bi bi-journal-text me-2"></i>Event Log</span>
+                        <button class="btn btn-sm btn-outline-light" id="clearLogBtn">Clear</button>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="event-log" id="eventLog">
+                            <div class="log-entry info">System ready. Initialize network to begin.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Network Info -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i>Network Info
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless text-white mb-0" style="font-size: 0.9rem;">
+                            <tr><td class="text-muted">Nodes:</td><td id="infoNodes">0</td></tr>
+                            <tr><td class="text-muted">Connections:</td><td id="infoConnections">0</td></tr>
+                            <tr><td class="text-muted">Avg Neighbors:</td><td id="infoAvgNeighbors">0</td></tr>
+                            <tr><td class="text-muted">Packet Loss:</td><td id="infoPacketLoss">0%</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content" style="background: #1a1a2e; color: #fff;">
+                <div class="modal-header" style="border-color: rgba(255,255,255,0.1);">
+                    <h5 class="modal-title"><i class="bi bi-book me-2"></i>User Manual</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 class="text-primary"><i class="bi bi-1-circle me-2"></i>Configure Your Network</h5>
+                    <p>Use the sliders on the left panel to set:</p>
+                    <ul>
+                        <li><strong>Number of Nodes:</strong> How many IoT devices to simulate (5-50)</li>
+                        <li><strong>Packet Loss Rate:</strong> Percentage of messages that will fail (0-80%)</li>
+                        <li><strong>Message Frequency:</strong> How often nodes send messages (1-10/sec)</li>
+                        <li><strong>Communication Range:</strong> Maximum distance for node connections (50-200)</li>
+                    </ul>
+                    
+                    <hr style="border-color: rgba(255,255,255,0.2);">
+                    
+                    <h5 class="text-primary"><i class="bi bi-2-circle me-2"></i>Initialize the Network</h5>
+                    <p>Click <strong>"Initialize Network"</strong> to create nodes. They are placed randomly and connections are established based on communication range. The network topology is shown in the visualization.</p>
+                    
+                    <hr style="border-color: rgba(255,255,255,0.2);">
+                    
+                    <h5 class="text-primary"><i class="bi bi-3-circle me-2"></i>Run the Simulation</h5>
+                    <p>Use the playback controls:</p>
+                    <ul>
+                        <li><i class="bi bi-play-fill"></i> <strong>Play:</strong> Start the simulation</li>
+                        <li><i class="bi bi-pause-fill"></i> <strong>Pause:</strong> Pause at current time</li>
+                        <li><i class="bi bi-stop-fill"></i> <strong>Stop:</strong> Reset to beginning</li>
+                        <li><i class="bi bi-skip-forward-fill"></i> <strong>Step:</strong> Move one event at a time</li>
+                        <li><strong>Speed:</strong> 0.25x to 4x playback speed</li>
+                        <li><strong>Timeline:</strong> Drag to jump to any point in time</li>
+                    </ul>
+                    
+                    <hr style="border-color: rgba(255,255,255,0.2);">
+                    
+                    <h5 class="text-primary"><i class="bi bi-4-circle me-2"></i>Understanding the Visualization</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Nodes:</h6>
+                            <ul>
+                                <li><span style="color: #667eea;">Purple</span> = Idle</li>
+                                <li><span style="color: #28a745;">Green</span> = Sending a message</li>
+                                <li><span style="color: #ffc107;">Yellow</span> = Receiving a message</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Packets:</h6>
+                            <ul>
+                                <li><span style="color: #00ff00;">Green dot</span> = Will be delivered</li>
+                                <li><span style="color: #ff4444;">Red dot</span> = Will be dropped</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <hr style="border-color: rgba(255,255,255,0.2);">
+                    
+                    <h5 class="text-primary"><i class="bi bi-5-circle me-2"></i>Statistics</h5>
+                    <ul>
+                        <li><strong>Sent:</strong> Total messages generated</li>
+                        <li><strong>Delivered:</strong> Messages successfully received</li>
+                        <li><strong>Dropped:</strong> Messages lost due to packet loss</li>
+                        <li><strong>In Flight:</strong> Messages currently traveling</li>
+                        <li><strong>Delivery Rate:</strong> Percentage of successful deliveries</li>
+                        <li><strong>Avg Latency:</strong> Average time for message delivery</li>
+                    </ul>
+                </div>
+                <div class="modal-footer" style="border-color: rgba(255,255,255,0.1);">
+                    <a href="https://github.com/raviasha/IOT_Swarm" target="_blank" class="btn btn-outline-light">
+                        <i class="bi bi-github me-2"></i>View on GitHub
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // ==================== P2P SWARM VISUALIZER ====================
+    class SwarmSimulator {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.nodes = [];
+            this.connections = [];
+            this.packets = [];
+            this.events = [];
+            this.eventIndex = 0;
+            
+            this.settings = {
+                nodeCount: 15,
+                packetLoss: 0.2,
+                msgFrequency: 3,
+                commRange: 120,
+                duration: 20,
+                showConnections: true,
+                showLabels: true
+            };
+            
+            this.isPlaying = false;
+            this.isPaused = false;
+            this.speed = 1;
+            this.currentTime = 0;
+            this.totalTime = 0;
+            
+            this.stats = { sent: 0, delivered: 0, dropped: 0, inFlight: 0, totalLatency: 0 };
+            
+            this.animationFrame = null;
+            this.lastFrameTime = 0;
+            
+            this.resizeCanvas();
+            window.addEventListener('resize', () => this.resizeCanvas());
+        }
+        
+        resizeCanvas() {
+            const container = this.canvas.parentElement;
+            this.canvas.width = container.clientWidth - 20;
+            this.canvas.height = 500;
+            this.draw();
+        }
+        
+        initializeNetwork() {
+            this.stop();
+            this.nodes = [];
+            this.connections = [];
+            this.packets = [];
+            this.events = [];
+            this.eventIndex = 0;
+            this.resetStats();
+            
+            const padding = 50;
+            const width = this.canvas.width - padding * 2;
+            const height = this.canvas.height - padding * 2;
+            
+            for (let i = 0; i < this.settings.nodeCount; i++) {
+                this.nodes.push({
+                    id: i,
+                    x: padding + Math.random() * width,
+                    y: padding + Math.random() * height,
+                    state: 'idle',
+                    neighbors: []
+                });
+            }
+            
+            this.updateConnections();
+            this.generateEvents();
+            
+            this.log('info', `Network initialized: ${this.nodes.length} nodes, ${this.connections.length} connections`);
+            this.updateNetworkInfo();
+            this.draw();
+        }
+        
+        updateConnections() {
+            this.connections = [];
+            const range = this.settings.commRange;
+            
+            for (let i = 0; i < this.nodes.length; i++) {
+                this.nodes[i].neighbors = [];
+                for (let j = i + 1; j < this.nodes.length; j++) {
+                    const dist = this.distance(this.nodes[i], this.nodes[j]);
+                    if (dist <= range) {
+                        this.connections.push({ from: i, to: j, distance: dist });
+                        this.nodes[i].neighbors.push(j);
+                        this.nodes[j].neighbors.push(i);
+                    }
+                }
+            }
+        }
+        
+        distance(a, b) {
+            return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+        }
+        
+        generateEvents() {
+            this.events = [];
+            const duration = this.settings.duration * 1000;
+            const interval = 1000 / this.settings.msgFrequency;
+            
+            let time = 0;
+            let msgId = 0;
+            
+            while (time < duration) {
+                const validSenders = this.nodes.filter(n => n.neighbors.length > 0);
+                if (validSenders.length === 0) break;
+                
+                const sender = validSenders[Math.floor(Math.random() * validSenders.length)];
+                const receiverIdx = sender.neighbors[Math.floor(Math.random() * sender.neighbors.length)];
+                const receiver = this.nodes[receiverIdx];
+                
+                const willDrop = Math.random() < this.settings.packetLoss;
+                const travelTime = this.distance(sender, receiver) * 3 + 100 + Math.random() * 200;
+                
+                this.events.push({
+                    type: 'send', time: time, msgId: msgId,
+                    from: sender.id, to: receiver.id,
+                    willDrop: willDrop, travelTime: travelTime
+                });
+                
+                this.events.push({
+                    type: willDrop ? 'drop' : 'deliver',
+                    time: time + travelTime, msgId: msgId,
+                    from: sender.id, to: receiver.id
+                });
+                
+                time += interval + Math.random() * interval * 0.5;
+                msgId++;
+            }
+            
+            this.events.sort((a, b) => a.time - b.time);
+            this.totalTime = duration;
+            
+            document.getElementById('totalTime').textContent = this.formatTime(this.totalTime);
+            document.getElementById('timeline').max = this.totalTime;
+        }
+        
+        animate(timestamp) {
+            if (!this.isPlaying || this.isPaused) return;
+            
+            const delta = (timestamp - this.lastFrameTime) * this.speed;
+            this.lastFrameTime = timestamp;
+            
+            this.currentTime += delta;
+            
+            if (this.currentTime >= this.totalTime) {
+                this.currentTime = this.totalTime;
+                this.stop();
+                this.log('info', '✓ Simulation completed!');
+                return;
+            }
+            
+            while (this.eventIndex < this.events.length && 
+                   this.events[this.eventIndex].time <= this.currentTime) {
+                this.processEvent(this.events[this.eventIndex]);
+                this.eventIndex++;
+            }
+            
+            this.updatePackets(delta);
+            this.draw();
+            this.updateUI();
+            
+            this.animationFrame = requestAnimationFrame((t) => this.animate(t));
+        }
+        
+        processEvent(event) {
+            if (event.type === 'send') {
+                const fromNode = this.nodes[event.from];
+                const toNode = this.nodes[event.to];
+                
+                this.packets.push({
+                    id: event.msgId,
+                    x: fromNode.x, y: fromNode.y,
+                    targetX: toNode.x, targetY: toNode.y,
+                    progress: 0,
+                    willDrop: event.willDrop,
+                    travelTime: event.travelTime,
+                    startTime: event.time
+                });
+                
+                fromNode.state = 'sending';
+                setTimeout(() => { fromNode.state = 'idle'; }, 200);
+                
+                this.stats.sent++;
+                this.stats.inFlight++;
+                this.log('sent', `Node ${event.from} → Node ${event.to} [MSG-${event.msgId}]`);
+                
+            } else if (event.type === 'deliver') {
+                const toNode = this.nodes[event.to];
+                toNode.state = 'receiving';
+                setTimeout(() => { toNode.state = 'idle'; }, 200);
+                
+                this.stats.delivered++;
+                this.stats.inFlight = Math.max(0, this.stats.inFlight - 1);
+                const sendEvent = this.events.find(e => e.msgId === event.msgId && e.type === 'send');
+                if (sendEvent) this.stats.totalLatency += event.time - sendEvent.time;
+                this.log('delivered', `✓ Node ${event.to} received MSG-${event.msgId}`);
+                
+            } else if (event.type === 'drop') {
+                this.stats.dropped++;
+                this.stats.inFlight = Math.max(0, this.stats.inFlight - 1);
+                this.log('dropped', `✗ MSG-${event.msgId} dropped!`);
+            }
+        }
+        
+        updatePackets(delta) {
+            for (let i = this.packets.length - 1; i >= 0; i--) {
+                const packet = this.packets[i];
+                packet.progress += delta / packet.travelTime;
+                if (packet.progress >= 1) this.packets.splice(i, 1);
+            }
+        }
+        
+        draw() {
+            const ctx = this.ctx;
+            ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.drawGrid();
+            if (this.settings.showConnections) this.drawConnections();
+            this.drawPackets();
+            this.drawNodes();
+        }
+        
+        drawGrid() {
+            const ctx = this.ctx;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < this.canvas.width; x += 50) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < this.canvas.height; y += 50) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); ctx.stroke();
+            }
+        }
+        
+        drawConnections() {
+            const ctx = this.ctx;
+            for (const conn of this.connections) {
+                const from = this.nodes[conn.from];
+                const to = this.nodes[conn.to];
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+        
+        drawNodes() {
+            const ctx = this.ctx;
+            for (const node of this.nodes) {
+                let color = '#667eea';
+                let glowColor = 'rgba(102, 126, 234, 0.3)';
+                let radius = 12;
+                
+                if (node.state === 'sending') {
+                    color = '#28a745'; glowColor = 'rgba(40, 167, 69, 0.5)'; radius = 15;
+                } else if (node.state === 'receiving') {
+                    color = '#ffc107'; glowColor = 'rgba(255, 193, 7, 0.5)'; radius = 15;
+                }
+                
+                const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 2);
+                gradient.addColorStop(0, glowColor);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius * 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                if (this.settings.showLabels) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(node.id, node.x, node.y + 25);
+                }
+            }
+        }
+        
+        drawPackets() {
+            const ctx = this.ctx;
+            for (const packet of this.packets) {
+                const x = packet.x + (packet.targetX - packet.x) * packet.progress;
+                const y = packet.y + (packet.targetY - packet.y) * packet.progress;
+                
+                const color = packet.willDrop ? '#ff4444' : '#00ff00';
+                const glowColor = packet.willDrop ? 'rgba(255, 68, 68, 0.5)' : 'rgba(0, 255, 0, 0.5)';
+                
+                // Trail
+                ctx.beginPath();
+                const trailStart = Math.max(0, packet.progress - 0.2);
+                ctx.moveTo(packet.x + (packet.targetX - packet.x) * trailStart, 
+                           packet.y + (packet.targetY - packet.y) * trailStart);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.5;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+                
+                // Glow
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, 15);
+                gradient.addColorStop(0, glowColor);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Packet
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+        }
+        
+        play() {
+            if (this.nodes.length === 0) {
+                this.log('info', 'Please initialize the network first.');
+                return;
+            }
+            this.isPlaying = true;
+            this.isPaused = false;
+            this.lastFrameTime = performance.now();
+            this.updateStatus('running', 'Running');
+            this.animationFrame = requestAnimationFrame((t) => this.animate(t));
+            document.getElementById('playPauseIcon').className = 'bi bi-pause-fill';
+        }
+        
+        pause() {
+            this.isPaused = true;
+            this.updateStatus('paused', 'Paused');
+            document.getElementById('playPauseIcon').className = 'bi bi-play-fill';
+        }
+        
+        stop() {
+            this.isPlaying = false;
+            this.isPaused = false;
+            this.currentTime = 0;
+            this.eventIndex = 0;
+            this.packets = [];
+            this.nodes.forEach(n => n.state = 'idle');
+            this.resetStats();
+            if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+            this.updateStatus('ready', 'Ready');
+            document.getElementById('playPauseIcon').className = 'bi bi-play-fill';
+            this.updateUI();
+            this.draw();
+        }
+        
+        stepForward() {
+            if (this.eventIndex < this.events.length) {
+                const event = this.events[this.eventIndex];
+                this.currentTime = event.time;
+                this.processEvent(event);
+                this.eventIndex++;
+                this.updatePackets(0);
+                this.draw();
+                this.updateUI();
+            }
+        }
+        
+        stepBackward() {
+            if (this.eventIndex > 0) {
+                const targetIndex = Math.max(0, this.eventIndex - 2);
+                this.stop();
+                for (let i = 0; i <= targetIndex; i++) this.processEvent(this.events[i]);
+                this.eventIndex = targetIndex + 1;
+                this.currentTime = this.events[targetIndex]?.time || 0;
+                this.draw();
+                this.updateUI();
+            }
+        }
+        
+        seekTo(time) {
+            this.stop();
+            for (let i = 0; i < this.events.length && this.events[i].time <= time; i++) {
+                this.processEvent(this.events[i]);
+                this.eventIndex = i + 1;
+            }
+            this.currentTime = time;
+            this.draw();
+            this.updateUI();
+        }
+        
+        setSpeed(speed) { this.speed = speed; }
+        
+        resetStats() {
+            this.stats = { sent: 0, delivered: 0, dropped: 0, inFlight: 0, totalLatency: 0 };
+        }
+        
+        updateUI() {
+            document.getElementById('currentTime').textContent = this.formatTime(this.currentTime);
+            document.getElementById('simTime').textContent = this.formatTime(this.currentTime);
+            document.getElementById('timeline').value = this.currentTime;
+            
+            document.getElementById('statSent').textContent = this.stats.sent;
+            document.getElementById('statDelivered').textContent = this.stats.delivered;
+            document.getElementById('statDropped').textContent = this.stats.dropped;
+            document.getElementById('statInFlight').textContent = this.stats.inFlight;
+            
+            const deliveryRate = this.stats.sent > 0 ? Math.round((this.stats.delivered / this.stats.sent) * 100) : 0;
+            document.getElementById('deliveryRate').textContent = deliveryRate + '%';
+            
+            const avgLatency = this.stats.delivered > 0 ? Math.round(this.stats.totalLatency / this.stats.delivered) : 0;
+            document.getElementById('avgLatency').textContent = avgLatency + 'ms';
+        }
+        
+        updateNetworkInfo() {
+            document.getElementById('infoNodes').textContent = this.nodes.length;
+            document.getElementById('infoConnections').textContent = this.connections.length;
+            const avgNeighbors = this.nodes.length > 0 ?
+                (this.nodes.reduce((sum, n) => sum + n.neighbors.length, 0) / this.nodes.length).toFixed(1) : 0;
+            document.getElementById('infoAvgNeighbors').textContent = avgNeighbors;
+            document.getElementById('infoPacketLoss').textContent = (this.settings.packetLoss * 100) + '%';
+        }
+        
+        updateStatus(state, text) {
+            document.getElementById('statusDot').className = 'status-dot ' + state;
+            document.getElementById('statusText').textContent = text;
+        }
+        
+        formatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        log(type, message) {
+            const log = document.getElementById('eventLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = `[${this.formatTime(this.currentTime)}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+    }
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('simCanvas');
+        const sim = new SwarmSimulator(canvas);
+        
+        // Slider events
+        document.getElementById('nodeCount').addEventListener('input', (e) => {
+            document.getElementById('nodeCountValue').textContent = e.target.value;
+            sim.settings.nodeCount = parseInt(e.target.value);
+        });
+        
+        document.getElementById('packetLoss').addEventListener('input', (e) => {
+            document.getElementById('packetLossValue').textContent = e.target.value + '%';
+            sim.settings.packetLoss = parseInt(e.target.value) / 100;
+        });
+        
+        document.getElementById('msgFrequency').addEventListener('input', (e) => {
+            document.getElementById('msgFrequencyValue').textContent = e.target.value + '/sec';
+            sim.settings.msgFrequency = parseInt(e.target.value);
+        });
+        
+        document.getElementById('commRange').addEventListener('input', (e) => {
+            document.getElementById('commRangeValue').textContent = e.target.value;
+            sim.settings.commRange = parseInt(e.target.value);
+        });
+        
+        document.getElementById('simDuration').addEventListener('change', (e) => {
+            sim.settings.duration = parseInt(e.target.value);
+        });
+        
+        document.getElementById('showConnections').addEventListener('change', (e) => {
+            sim.settings.showConnections = e.target.checked;
+            sim.draw();
+        });
+        
+        document.getElementById('showLabels').addEventListener('change', (e) => {
+            sim.settings.showLabels = e.target.checked;
+            sim.draw();
+        });
+        
+        // Buttons
+        document.getElementById('initSimBtn').addEventListener('click', () => sim.initializeNetwork());
+        
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            if (!sim.isPlaying || sim.isPaused) sim.play();
+            else sim.pause();
+        });
+        
+        document.getElementById('stopBtn').addEventListener('click', () => sim.stop());
+        document.getElementById('stepForwardBtn').addEventListener('click', () => sim.stepForward());
+        document.getElementById('stepBackBtn').addEventListener('click', () => sim.stepBackward());
+        
+        // Speed buttons
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                sim.setSpeed(parseFloat(btn.dataset.speed));
+            });
+        });
+        
+        // Timeline
+        document.getElementById('timeline').addEventListener('input', (e) => {
+            sim.seekTo(parseInt(e.target.value));
+        });
+        
+        // Clear log
+        document.getElementById('clearLogBtn').addEventListener('click', () => {
+            document.getElementById('eventLog').innerHTML = '<div class="log-entry info">Log cleared.</div>';
+        });
+        
+        // Initialize on load
+        sim.initializeNetwork();
+    });
+    </script>
+</body>
+</html>
